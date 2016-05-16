@@ -2,19 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on The DevLog</title>
-    <link>http://mirmansoor.github.io/thedevlog/post/</link>
+    <link>http://mirmansoor.com/post/</link>
     <description>Recent content in Posts on The DevLog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sun, 20 Mar 2016 00:29:54 +1100</lastBuildDate>
-    <atom:link href="http://mirmansoor.github.io/thedevlog/post/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://mirmansoor.com/post/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
       <title>Automated Build and Deployment of SQL Server Reporting Services projects</title>
-      <link>http://mirmansoor.github.io/thedevlog/post/automateddeploymentssrsproject/</link>
+      <link>http://mirmansoor.com/post/automateddeploymentssrsproject/</link>
       <pubDate>Sun, 20 Mar 2016 00:29:54 +1100</pubDate>
       
-      <guid>http://mirmansoor.github.io/thedevlog/post/automateddeploymentssrsproject/</guid>
+      <guid>http://mirmansoor.com/post/automateddeploymentssrsproject/</guid>
       <description>
 
 &lt;p&gt;On a recent project that was migrating from a legacy environment I was able to integrate SSRS projects into Bamboo and Octopus build and deploy pipelines and have them deployed automatically to the report server from a visual studio report project.&lt;/p&gt;
@@ -23,7 +23,7 @@
 
 &lt;figure &gt;
     
-        &lt;img src=&#34;http://mirmansoor.github.io/thedevlog/ssrsscreenshot1.jpg&#34; /&gt;
+        &lt;img src=&#34;http://mirmansoor.com/ssrsscreenshot1.jpg&#34; /&gt;
     
     
 &lt;/figure&gt;
