@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <title>Automated Build and Deployment of SQL Server Reporting Services projects</title>
+
+  <meta name="author" content="" />
+  
+  
+  <meta name="description" content="Integrating SSRS rptproj and its rdls into automated build and deploy">
+  
+
+  <meta name="generator" content="Hugo 0.15" />
+
+  <link rel="alternate" href="http://mirmansoor.github.io/thedevlog/index.xml" type="application/rss+xml" title="The DevLog">
+
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="http://mirmansoor.github.io/thedevlogcss/bootstrap.min.css" />
+  <link rel="stylesheet" href="http://mirmansoor.github.io/thedevlogcss/main.css" />
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" />
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" />
+  <link rel="stylesheet" href="http://mirmansoor.github.io/thedevlogcss/pygment_highlights.css" />
+  
+  
+  <meta property="og:title" content="Automated Build and Deployment of SQL Server Reporting Services projects" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="/" />
+  <meta property="og:image" content="" />
+  
+</head>
+
+
+  <body>
+
+    <nav class="navbar navbar-default navbar-fixed-top navbar-custom">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="http://mirmansoor.github.io/thedevlog">The DevLog</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="main-navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+      </ul>
+    </div>
+
+	<div class="avatar-container">
+	  <div class="avatar-img-border">
+      
+	  </div>
+	</div>
+
+  </div>
+</nav>
+
+
+    <div role="main" class="container main-content">
+
+      
+        
+
+
+
+
+
+<header class="header-section ">
+
+<div class="intro-header no-img">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-heading">
+          <h1>Automated Build and Deployment of SQL Server Reporting Services projects</h1>
+      
+      
+      
+      <span class="post-meta">Posted on March 20, 2016</span>
+      
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</header>
+
+
+
+
+<div class="container">
+  <div class="row">
+    <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+      <article role="main" class="blog-post">
+          
+
+<p>On a recent project that was migrating from a legacy environment I was able to integrate SSRS projects into Bamboo and Octopus build and deploy pipelines and have them deployed automatically to the report server from a visual studio report project.</p>
+
+<p>SSRS exposes the full functionality of the report server via the Report Server Web Service. The URL for the web service can be found in the reporting services configuration manager on the report server. Any automated deployment to a report server can utilize this web service to deploy and manage reports.
+
+<figure >
+    
+        <img src="http://mirmansoor.github.io/thedevlog/ssrsscreenshot1.jpg" />
+    
+    
+</figure>
+</p>
+
+<p>Fortunately there is a <a href="https://github.com/timabell/ssrs-powershell-deploy">github repository</a> with powershell scripts that can help us deploy reports from a reporting service project (rptproj) to a report server. The powershell scripts will deploy all the report definition files (rdl), data sources and data sets to the report server using the SSRS Web Service.</p>
+
+<h3 id="shared-data-sources:e0aa06637ea469630d18a6ef404e22fd">Shared Data Sources</h3>
+
+<p>In case your report project uses shared data sources, there is a small tweak needed to the scripts in order to create them.
+In the Deploy-SSRSProject.ps1 file look for the function New-SSRSDataSource and the following lines:
+<div class="highlight"><pre><code class="language-powershell" data-lang="powershell"><span></span><span class="nv">$Definition</span> <span class="p">=</span> <span class="nb">New-Object</span> <span class="n">-TypeName</span> <span class="n">SSRS</span><span class="p">.</span><span class="n">ReportingService2010</span><span class="p">.</span><span class="n">DataSourceDefinition</span>
+<span class="nv">$Definition</span><span class="p">.</span><span class="n">ConnectString</span> <span class="p">=</span> <span class="nv">$ConnProps</span><span class="p">.</span><span class="n">ConnectString</span>
+<span class="nv">$Definition</span><span class="p">.</span><span class="n">Extension</span> <span class="p">=</span> <span class="nv">$ConnProps</span><span class="p">.</span><span class="n">Extension</span>
+<span class="k">if</span> <span class="p">(</span><span class="no">[Convert]</span><span class="p">::</span><span class="n">ToBoolean</span><span class="p">(</span><span class="nv">$ConnProps</span><span class="p">.</span><span class="n">IntegratedSecurity</span><span class="p">))</span> <span class="p">{</span>
+    <span class="nv">$Definition</span><span class="p">.</span><span class="n">CredentialRetrieval</span> <span class="p">=</span> <span class="s1">&#39;Integrated&#39;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+For making the data source shared, we need to set the CredentialRetrieval property of the data source definition to &lsquo;Store&rsquo;.
+<div class="highlight"><pre><code class="language-ps1" data-lang="ps1"><span></span><span class="nv">$Definition</span><span class="p">.</span><span class="n">CredentialRetrieval</span> <span class="p">=</span> <span class="s1">&#39;Store&#39;</span>
+<span class="nv">$Definition</span><span class="p">.</span><span class="n">UserName</span> <span class="p">=</span> <span class="nv">$UserName</span>
+<span class="nv">$Definition</span><span class="p">.</span><span class="n">Password</span> <span class="p">=</span> <span class="nv">$Password</span>
+</code></pre></div>
+
+Note that you would need to pass in two additional user name and password parameters to the function New-SSRSDataSource  for this to work.</p>
+
+<h3 id="integrating-scripts-in-automated-deployment-tools:e0aa06637ea469630d18a6ef404e22fd">Integrating scripts in automated deployment tools</h3>
+
+<p>These scripts can be integrated into any automated deployment tool as part of deployment steps. In case of <a href="https://octopus.com/">Octopus deploy</a>, we can easily add a Deploy.ps1/PostDeploy.ps1 PowerShell script which Octopus will by default run when it sees such a file in an Octopus package. More on that here. Also you can easily inject the user name and password parameters from Octopus variables by using $OctopusParameters[&ldquo;ReportConnectionUserName&rdquo;].
+You can read more about Octopus deploy <a href="http://docs.octopusdeploy.com/display/OD/Key+Concepts">here</a>.</p>
+
+      </article>
+
+      <ul class="pager blog-pager">
+        
+        
+      </ul>
+
+      
+
+    </div>
+  </div>
+</div>
+
+      
+
+    </div>
+
+    <footer>
+  <div class="container beautiful-jekyll-footer">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <ul class="list-inline text-center footer-links">
+          
+          
+		      
+		      
+		      
+	    	  
+          
+          
+
+    		  <li>
+      			<a href="http://mirmansoor.github.io/thedevlogindex.xml" title="RSS">
+      			  <span class="fa-stack fa-lg">
+        				<i class="fa fa-circle fa-stack-2x"></i>
+        				<i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+      			  </span>
+      			</a>
+    		  </li>		
+
+        </ul>
+        <p class="copyright text-muted">
+    		  
+    		  &nbsp;&bull;&nbsp;
+    		  2016
+    		  
+    		  
+    		  &nbsp;&bull;&nbsp;
+    		  <a href="http://mirmansoor.github.io/thedevlog">The DevLog</a>
+    		  
+  	    </p>
+  	        
+    		<p class="theme-by text-muted">
+    		  Theme by
+    		  <a href="http://deanattali.com/beautiful-jekyll/">beautiful-jekyll</a>
+    		</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="http://mirmansoor.github.io/thedevlogjs/jquery-1.11.2.min.js"></script>
+<script src="http://mirmansoor.github.io/thedevlogjs/bootstrap.min.js"></script>
+<script src="http://mirmansoor.github.io/thedevlogjs/main.js"></script>
+
+
+
+  </body>
+</html>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Automated Builds on The DevLog</title>
+    <link>http://mirmansoor.github.io/thedevlog/tags/automated-builds/</link>
+    <description>Recent content in Automated Builds on The DevLog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 20 Mar 2016 00:29:54 +1100</lastBuildDate>
+    <atom:link href="http://mirmansoor.github.io/thedevlog/tags/automated-builds/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Automated Build and Deployment of SQL Server Reporting Services projects</title>
+      <link>http://mirmansoor.github.io/thedevlog/post/automateddeploymentssrsproject/</link>
+      <pubDate>Sun, 20 Mar 2016 00:29:54 +1100</pubDate>
+      
+      <guid>http://mirmansoor.github.io/thedevlog/post/automateddeploymentssrsproject/</guid>
+      <description>
+
+&lt;p&gt;On a recent project that was migrating from a legacy environment I was able to integrate SSRS projects into Bamboo and Octopus build and deploy pipelines and have them deployed automatically to the report server from a visual studio report project.&lt;/p&gt;
+
+&lt;p&gt;SSRS exposes the full functionality of the report server via the Report Server Web Service. The URL for the web service can be found in the reporting services configuration manager on the report server. Any automated deployment to a report server can utilize this web service to deploy and manage reports.
+
+&lt;figure &gt;
+    
+        &lt;img src=&#34;http://mirmansoor.github.io/thedevlog/ssrsscreenshot1.jpg&#34; /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Fortunately there is a &lt;a href=&#34;https://github.com/timabell/ssrs-powershell-deploy&#34;&gt;github repository&lt;/a&gt; with powershell scripts that can help us deploy reports from a reporting service project (rptproj) to a report server. The powershell scripts will deploy all the report definition files (rdl), data sources and data sets to the report server using the SSRS Web Service.&lt;/p&gt;
+
+&lt;h3 id=&#34;shared-data-sources:e0aa06637ea469630d18a6ef404e22fd&#34;&gt;Shared Data Sources&lt;/h3&gt;
+
+&lt;p&gt;In case your report project uses shared data sources, there is a small tweak needed to the scripts in order to create them.
+In the Deploy-SSRSProject.ps1 file look for the function New-SSRSDataSource and the following lines:
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre&gt;&lt;code class=&#34;language-powershell&#34; data-lang=&#34;powershell&#34;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;$Definition&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;nb&#34;&gt;New-Object&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;-TypeName&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;SSRS&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ReportingService2010&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;DataSourceDefinition&lt;/span&gt;
+&lt;span class=&#34;nv&#34;&gt;$Definition&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ConnectString&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;$ConnProps&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ConnectString&lt;/span&gt;
+&lt;span class=&#34;nv&#34;&gt;$Definition&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Extension&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;$ConnProps&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Extension&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;no&#34;&gt;[Convert]&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ToBoolean&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;$ConnProps&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;IntegratedSecurity&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+    &lt;span class=&#34;nv&#34;&gt;$Definition&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;CredentialRetrieval&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;s1&#34;&gt;&amp;#39;Integrated&amp;#39;&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+For making the data source shared, we need to set the CredentialRetrieval property of the data source definition to &amp;lsquo;Store&amp;rsquo;.
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre&gt;&lt;code class=&#34;language-ps1&#34; data-lang=&#34;ps1&#34;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;$Definition&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;CredentialRetrieval&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;s1&#34;&gt;&amp;#39;Store&amp;#39;&lt;/span&gt;
+&lt;span class=&#34;nv&#34;&gt;$Definition&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;UserName&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;$UserName&lt;/span&gt;
+&lt;span class=&#34;nv&#34;&gt;$Definition&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Password&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;$Password&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+Note that you would need to pass in two additional user name and password parameters to the function New-SSRSDataSource  for this to work.&lt;/p&gt;
+
+&lt;h3 id=&#34;integrating-scripts-in-automated-deployment-tools:e0aa06637ea469630d18a6ef404e22fd&#34;&gt;Integrating scripts in automated deployment tools&lt;/h3&gt;
+
+&lt;p&gt;These scripts can be integrated into any automated deployment tool as part of deployment steps. In case of &lt;a href=&#34;https://octopus.com/&#34;&gt;Octopus deploy&lt;/a&gt;, we can easily add a Deploy.ps1/PostDeploy.ps1 PowerShell script which Octopus will by default run when it sees such a file in an Octopus package. More on that here. Also you can easily inject the user name and password parameters from Octopus variables by using $OctopusParameters[&amp;ldquo;ReportConnectionUserName&amp;rdquo;].
+You can read more about Octopus deploy &lt;a href=&#34;http://docs.octopusdeploy.com/display/OD/Key+Concepts&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
